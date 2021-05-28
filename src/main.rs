@@ -63,7 +63,7 @@ fn main() -> io::Result<()> {
                     "hex" => display = DisplayMode::Hexadecimal,
                     "char" => display = DisplayMode::Character,
                     "int" => display = DisplayMode::Integer,
-                    _ => {}
+                    _ => println!("\nGiven path is incorrect"),
                 }
                 continue;
             }
@@ -213,12 +213,12 @@ fn generate_hash256(bytes: &[u8], show_chunks: bool, display: &DisplayMode) -> S
 
     // Compute hash
     let mut hash = String::new();
-
     match display {
         DisplayMode::Binary => {
             for i in sqrt_fract.iter() {
-                hash.push_str(format!("{:b}", i).as_str())
+                hash.push_str(format!("{:032b}\n", i).as_str());
             }
+            hash = String::from(hash.trim_end())
         }
         DisplayMode::Hexadecimal => {
             for i in sqrt_fract.iter() {
@@ -227,11 +227,15 @@ fn generate_hash256(bytes: &[u8], show_chunks: bool, display: &DisplayMode) -> S
             hash = hash.to_uppercase()
         }
         DisplayMode::Character => {
-            hash.push_str(format!("Not implemented yet!").as_str())
+            let mut bytes = Vec::<u8>::new();
+            for i in sqrt_fract.iter() {
+                bytes.append(&mut i.to_be_bytes().to_vec())
+            }
+            hash = String::from_utf8_lossy(&bytes).to_string();
         }
         DisplayMode::Integer => {
             for i in sqrt_fract.iter() {
-                hash.push_str(format!("{}", i).as_str())
+                hash.push_str(format!("{} ", i).as_str())
             }
         }
     }
