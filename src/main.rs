@@ -63,7 +63,7 @@ fn main() -> io::Result<()> {
                     "hex" => display = DisplayMode::Hexadecimal,
                     "char" => display = DisplayMode::Character,
                     "int" => display = DisplayMode::Integer,
-                    _ => println!("\nGiven path is incorrect"),
+                    _ => println!("\nGiven display input is incorrect"),
                 }
                 continue;
             }
