@@ -4,16 +4,30 @@ use std::fs::File;
 use std::io;
 use std::io::prelude::*;
 
+#[derive(Debug)]
+enum DisplayMode {
+    Binary,
+    Hexadecimal,
+    Character,
+    Integer
+}
+
 fn main() -> io::Result<()> {
+
     let mut show_chunks = false;
-    println!("Welcome to Sha256 endcoder!");
+    let mut display = DisplayMode::Hexadecimal;
+
     loop {
-        println!("{:-<40}", "-");
+        println!("{:-<50}", "-");
+        println!("Welcome to Sha256 endcoder created by Kihau!");
+        println!("Current display mode is set to: {:?}", display);
+        println!("{:-<50}", "-");
         println!("Available input options:");
         println!("1. \"string [message]\" - encodes a message");
-        println!("2. \"file [path]\"      - encodes a file");
-        println!("3. \"chunks\"           - prints generated chunks");
-        println!("4. \"quit\"             - exits the program");
+        println!("2. \"file [path]\" - encodes a file");
+        println!("3. \"chunks\" - prints generated chunks");
+        println!("4. \"display (bin/hex/char/int)\" - changes display mode");
+        println!("5. \"quit\" - exits the program");
 
         print!("Input: ");
         io::stdout().flush().unwrap();
@@ -22,17 +36,17 @@ fn main() -> io::Result<()> {
         let mut _hash = String::new();
 
         match input.0 {
-            "string" => {
-                _hash = generate_hash256(input.1.as_bytes(), show_chunks);
+            "string " => {
+                _hash = generate_hash256(input.1.as_bytes(), show_chunks, &display);
                 println!("\nGenerated hash code:\n{0}", _hash)
             }
-            "file" => {
+            "file " => {
                 let file = File::open(input.1);
                 match file {
                     Ok(mut f) => {
                         let mut buffer = Vec::new();
                         f.read_to_end(&mut buffer)?;
-                        _hash = generate_hash256(buffer.as_slice(), show_chunks);
+                        _hash = generate_hash256(buffer.as_slice(), show_chunks, &display);
                         println!("\nGenerated hash code:\n{0}", _hash)
                     }
                     Err(_) => println!("\nGiven path is incorrect"),
@@ -41,6 +55,17 @@ fn main() -> io::Result<()> {
             "chunks" => {
                 show_chunks = !show_chunks;
                 println!("\nChunk visibility in now set to: {}", show_chunks);
+            }
+            "display " => {
+                let out  = input.1.as_str();
+                match out {
+                    "bin" => display = DisplayMode::Binary,
+                    "hex" => display = DisplayMode::Hexadecimal,
+                    "char" => display = DisplayMode::Character,
+                    "int" => display = DisplayMode::Integer,
+                    _ => {}
+                }
+                continue;
             }
             "quit" => break,
             &_ => println!("\nGiven input is incorrect"),
@@ -61,18 +86,15 @@ fn get_input() -> (&'static str, String) {
         .expect("Did not enter a correct string");
 
     input = String::from(input.trim());
-    if input.starts_with("string ") {
-        res = "string";
-        input.replace_range(0..7, "");
-    } else if input.starts_with("file ") {
-        res = "file";
-        input.replace_range(0..5, "")
-    } else if input.starts_with("chunks") {
-        res = "chunks";
-        input.replace_range(0..4, "")
-    } else if input.starts_with("quit") {
-        res = "quit";
-        input.replace_range(0..4, "")
+
+
+    let outputs = vec![ "string ", "file ", "chunks", "display ", "quit" ];
+    for out in outputs.iter() {
+        if input.starts_with(out) {
+            res = out;
+            input.replace_range(0..out.len(), "");
+            break;
+        }
     }
 
     (res, String::from(input.trim()))
@@ -89,7 +111,7 @@ const CUBE_FRACT: [u32; 64] = [
     0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208, 0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
 ];
 
-fn generate_hash256(bytes: &[u8], show_chunks: bool) -> String {
+fn generate_hash256(bytes: &[u8], show_chunks: bool, display: &DisplayMode) -> String {
     let mut big_endian = (bytes.len() as u64 * 8).to_be_bytes().to_vec();
     let mut bytes = bytes.to_vec();
 
@@ -191,10 +213,29 @@ fn generate_hash256(bytes: &[u8], show_chunks: bool) -> String {
 
     // Compute hash
     let mut hash = String::new();
-    for i in sqrt_fract.iter() {
-        hash.push_str(format!("{:08x}", i).as_str())
+
+    match display {
+        DisplayMode::Binary => {
+            for i in sqrt_fract.iter() {
+                hash.push_str(format!("{:b}", i).as_str())
+            }
+        }
+        DisplayMode::Hexadecimal => {
+            for i in sqrt_fract.iter() {
+                hash.push_str(format!("{:08x}", i).as_str())
+            }
+            hash = hash.to_uppercase()
+        }
+        DisplayMode::Character => {
+            hash.push_str(format!("Not implemented yet!").as_str())
+        }
+        DisplayMode::Integer => {
+            for i in sqrt_fract.iter() {
+                hash.push_str(format!("{}", i).as_str())
+            }
+        }
     }
-    hash.to_uppercase()
+    hash
 }
 
 use std::io::Write;
