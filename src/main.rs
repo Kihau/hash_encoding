@@ -14,6 +14,7 @@ enum DisplayMode {
 
 fn main() -> io::Result<()> {
 
+    // testing
     let mut show_chunks = false;
     let mut display = DisplayMode::Hexadecimal;
 
